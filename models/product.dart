@@ -1,4 +1,17 @@
-import 'package:flutter_okr/models/seller.dart';
+// lib/models/product.dart
+class Seller {
+  final String username;
+  final double rating; // 0..5
+  final int ratingCount;
+  final String? avatarUrl; // optional
+
+  const Seller({
+    required this.username,
+    required this.rating,
+    required this.ratingCount,
+    this.avatarUrl,
+  });
+}
 
 class Product {
   final String id;
@@ -6,21 +19,16 @@ class Product {
   final String brand;
   final double price;
   final List<String> images;
-
   final String condition;
   final String size;
   final String colour;
-  final String categoryPath; // e.g. "Women > Clothing > Jeans"
-
+  final String categoryPath;
   final String description;
   final Seller seller;
-
   final List<String> badges;
-  final DateTime uploadedAt;
-
-  // mutable-ish ui fields
   final int likes;
   final bool likedByMe;
+  final DateTime uploadedAt;
 
   const Product({
     required this.id,
@@ -34,45 +42,29 @@ class Product {
     required this.categoryPath,
     required this.description,
     required this.seller,
-    required this.badges,
-    required this.uploadedAt,
+    this.badges = const [],
     this.likes = 0,
     this.likedByMe = false,
+    required this.uploadedAt,
   });
 
-  Product copyWith({
-    String? id,
-    String? title,
-    String? brand,
-    double? price,
-    List<String>? images,
-    String? condition,
-    String? size,
-    String? colour,
-    String? categoryPath,
-    String? description,
-    Seller? seller,
-    List<String>? badges,
-    DateTime? uploadedAt,
-    int? likes,
-    bool? likedByMe,
-  }) {
+  Product copyWith({bool? likedByMe, int? likes}) {
     return Product(
-      id: id ?? this.id,
-      title: title ?? this.title,
-      brand: brand ?? this.brand,
-      price: price ?? this.price,
-      images: images ?? this.images,
-      condition: condition ?? this.condition,
-      size: size ?? this.size,
-      colour: colour ?? this.colour,
-      categoryPath: categoryPath ?? this.categoryPath,
-      description: description ?? this.description,
-      seller: seller ?? this.seller,
-      badges: badges ?? this.badges,
-      uploadedAt: uploadedAt ?? this.uploadedAt,
+      id: id,
+      title: title,
+      brand: brand,
+      price: price,
+      images: images,
+      condition: condition,
+      size: size,
+      colour: colour,
+      categoryPath: categoryPath,
+      description: description,
+      seller: seller,
+      badges: badges,
       likes: likes ?? this.likes,
       likedByMe: likedByMe ?? this.likedByMe,
+      uploadedAt: uploadedAt,
     );
   }
 }
