@@ -10,6 +10,19 @@ class SellPage extends StatefulWidget {
   State<SellPage> createState() => _SellPageState();
 }
 
+class CategoryPick {
+  /// Each level’s label, e.g. ['Women','Clothing','Outerwear','Jackets','Denim jackets']
+  final List<String> labels;
+
+  const CategoryPick(this.labels);
+
+  /// Full breadcrumb string: Women > Clothing > Outerwear > Jackets > Denim jackets
+  String get fullPath => labels.join(' > ');
+
+  /// The final leaf only: Denim jackets
+  String get leaf => labels.isNotEmpty ? labels.last : '';
+}
+
 class _SellPageState extends State<SellPage> {
   final _titleCtrl = TextEditingController();
   final _descCtrl = TextEditingController();
@@ -19,6 +32,9 @@ class _SellPageState extends State<SellPage> {
 
   String? _category;
   double? _price;
+  CategoryPick? _categoryPick; // full info (labels, fullPath, leaf)
+  String? _categoryPath; // cached "Women > Clothing > …"
+  String? _categoryLeaf; // cached "Denim jackets"
 
   @override
   void dispose() {
@@ -28,14 +44,45 @@ class _SellPageState extends State<SellPage> {
   }
 
   bool get _isValid =>
-      _titleCtrl.text.trim().isNotEmpty && _category != null && _price != null;
+      _titleCtrl.text.trim().isNotEmpty &&
+      _categoryPath != null &&
+      _price != null;
 
+  /*
   Future<void> _openCategory() async {
-    final result = await Navigator.push<String>(
+    final result = await Navigator.push<CategoryPick>(
       context,
       MaterialPageRoute(builder: (_) => const CategoryPage()),
     );
-    if (result != null) setState(() => _category = result);
+    if (result != null) {
+      setState(() {
+        _categoryPick = result;
+        _categoryPath = result.fullPath; // store full breadcrumb
+        _categoryLeaf = result.leaf; // short label for UI
+      });
+    }
+  }*/
+
+  Future<void> _openCategory() async {
+    final result = await Navigator.push<dynamic>(
+      context,
+      MaterialPageRoute(builder: (_) => const CategoryPage()),
+    );
+
+    if (!mounted || result == null) return;
+
+    if (result is CategoryPick) {
+      setState(() {
+        _categoryPath = result.fullPath;
+        _categoryLeaf = result.leaf;
+      });
+    } else if (result is String) {
+      // Backward compatibility if some page still returns a String
+      setState(() {
+        _categoryPath = result;
+        _categoryLeaf = result.split(' > ').last;
+      });
+    }
   }
 
   Future<void> _openPrice() async {
@@ -199,10 +246,14 @@ class _SellPageState extends State<SellPage> {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (_category != null)
+                if (_categoryLeaf != null)
                   Padding(
                     padding: const EdgeInsets.only(right: 6),
-                    child: Text(_category!, style: t.bodyMedium),
+                    child: Text(
+                      _categoryLeaf!,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
                 const Icon(Icons.chevron_right),
               ],
