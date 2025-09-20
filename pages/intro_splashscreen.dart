@@ -10,21 +10,22 @@ class IntroSplashScreen extends StatefulWidget {
 
 class _IntroSplashScreenState extends State<IntroSplashScreen> {
   double _opacity = 1.0;
-  bool _navigated = false;
+  bool _didNavigate = false;
 
   @override
   void initState() {
     super.initState();
+    // Wait 2s, then start fading out the splash content.
     Future.delayed(const Duration(seconds: 2), () {
       if (!mounted) return;
       setState(() => _opacity = 0);
     });
   }
 
-  void _goHome() {
-    if (_navigated || !mounted) return;
-    _navigated = true;
-    Navigator.of(context).pushReplacementNamed('/home');
+  void _goNext() {
+    if (_didNavigate || !mounted) return;
+    _didNavigate = true;
+    Navigator.of(context).pushReplacementNamed('/shell');
   }
 
   @override
@@ -32,10 +33,10 @@ class _IntroSplashScreenState extends State<IntroSplashScreen> {
     return Scaffold(
       backgroundColor: Colors.tealAccent,
       body: AnimatedOpacity(
-        opacity: _opacity,
+        opacity: _opacity, // 1 → 0 triggers fade-out
         duration: const Duration(milliseconds: 500),
         onEnd: () {
-          if (_opacity == 0) _goHome();
+          if (_opacity == 0) _goNext(); // navigate exactly once
         },
         child: const Center(
           child: Text(
