@@ -1,4 +1,5 @@
 import "package:flutter/material.dart";
+import "package:flutter_okr/pages/sell_page.dart";
 
 /// ---------------------------------------------------------------------------
 /// Data model for a category tree
@@ -13,44 +14,6 @@ class CategoryNode {
 
 /// Build the category tree shown in your screenshots
 CategoryNode _buildRootTree() {
-  /*const clothingChildren = [
-    CategoryNode('Outerwear'),
-    CategoryNode('Jumpers & sweaters'),
-    CategoryNode('Suits & blazers'),
-    CategoryNode('Dresses'),
-    CategoryNode('Skirts'),
-    CategoryNode('Tops & t-shirts'),
-    CategoryNode('Jeans'),
-    CategoryNode('Trousers & leggings'),
-    CategoryNode('Shorts & cropped trousers'),
-    CategoryNode('Jumpsuits & playsuits'),
-    CategoryNode('Swimwear'),
-    CategoryNode('Lingerie & nightwear'),
-    CategoryNode('Maternity clothes'),
-    CategoryNode('Activewear'),
-    CategoryNode('Costumes & special outfits'),
-    CategoryNode('Other clothing'),
-  ];
-
-  const girlsclothingChildren = [
-    CategoryNode('Outerwear'),
-    CategoryNode('Jumpers & sweaters'),
-    CategoryNode('Suits & blazers'),
-    CategoryNode('Dresses'),
-    CategoryNode('Skirts'),
-    CategoryNode('Tops & t-shirts'),
-    CategoryNode('Jeans'),
-    CategoryNode('Trousers & leggings'),
-    CategoryNode('Shorts & cropped trousers'),
-    CategoryNode('Jumpsuits & playsuits'),
-    CategoryNode('Swimwear'),
-    CategoryNode('Lingerie & nightwear'),
-    CategoryNode('Maternity clothes'),
-    CategoryNode('Activewear'),
-    CategoryNode('Costumes & special outfits'),
-    CategoryNode('Other clothing'),
-  ];*/
-
   const women = CategoryNode(
     'Women',
     icon: Icons.woman_outlined,
@@ -638,24 +601,6 @@ CategoryNode _buildRootTree() {
   );
 }
 
-/*
-/// ---------------------------------------------------------------------------
-/// Root: “Category” page (Women, Men, Kids, …)
-/// ---------------------------------------------------------------------------
-class CategoryPage extends StatelessWidget {
-  const CategoryPage({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final root = _buildRootTree();
-    return _CategoryLevelPage(
-      title: 'Category',
-      nodes: root.children,
-      path: const [],
-    );
-  }
-}
-*/
 /// ---------------------------------------------------------------------------
 /// Root: “Category” page (Women, Men, Kids, …) with optional initial path
 /// ---------------------------------------------------------------------------
@@ -771,12 +716,14 @@ class _CategoryLevelPageState extends State<_CategoryLevelPage> {
                           color: Colors.grey,
                         )
                       : const Icon(Icons.chevron_right),
-                  onTap: () {
+                  onTap: () async {
                     if (node.isLeaf) {
-                      final fullPath = [...widget.path, node.label].join(' > ');
-                      Navigator.pop(context, fullPath); // return selection
+                      // Return a CategoryPick directly
+                      final labels = [...widget.path, node.label];
+                      Navigator.pop(context, CategoryPick(labels));
                     } else {
-                      Navigator.push(
+                      // Go one level deeper and WAIT for a result
+                      final pick = await Navigator.push<CategoryPick>(
                         context,
                         MaterialPageRoute(
                           builder: (_) => _CategoryLevelPage(
@@ -786,6 +733,11 @@ class _CategoryLevelPageState extends State<_CategoryLevelPage> {
                           ),
                         ),
                       );
+
+                      // If a deeper level returned a pick, bubble it up
+                      if (pick != null && context.mounted) {
+                        Navigator.pop(context, pick);
+                      }
                     }
                   },
                 );
