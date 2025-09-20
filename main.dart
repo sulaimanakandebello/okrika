@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_okr/app_shell.dart';
 import 'package:provider/provider.dart';
 
 import 'models/product.dart';
@@ -39,6 +40,7 @@ class OkrikaApp extends StatelessWidget {
 
         // Simple named routes for your main tabs
         routes: {
+          '/shell': (_) => const AppShell(),
           '/home': (_) => const HomePage(),
           '/search': (_) => const SearchPage(),
           '/sell': (_) => const SellPage(),
