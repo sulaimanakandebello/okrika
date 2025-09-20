@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_okr/models/seller.dart';
-import '../models/product.dart'; // <-- your single source of truth
+import '../models/product.dart';
 import 'make_offer_page.dart';
 import 'checkout_page.dart';
 
@@ -31,8 +30,7 @@ class _ProductPageState extends State<ProductPage> {
   void initState() {
     super.initState();
     _likes = widget.product.likes;
-    _liked =
-        widget.product.likedByMe; // if you don’t have this field, set false
+    _liked = widget.product.likedByMe;
   }
 
   @override
@@ -53,7 +51,6 @@ class _ProductPageState extends State<ProductPage> {
     final p = widget.product;
     final t = Theme.of(context).textTheme;
     final cs = Theme.of(context).colorScheme;
-    final avatar = p.seller.avatarUrl ?? '';
 
     final others = widget.sellersOtherItems ?? _demoProductsForSeller(p);
     final similar = widget.similarItems ?? _demoSimilarProducts(p);
@@ -67,7 +64,7 @@ class _ProductPageState extends State<ProductPage> {
       ),
       body: CustomScrollView(
         slivers: [
-          // ------------------ images ------------------
+          // ----- image carousel -----
           SliverToBoxAdapter(
             child: AspectRatio(
               aspectRatio: 1,
@@ -112,7 +109,6 @@ class _ProductPageState extends State<ProductPage> {
                       ),
                     ),
                   ),
-                  // like bubble
                   Positioned(
                     right: 12,
                     bottom: 12,
@@ -159,31 +155,13 @@ class _ProductPageState extends State<ProductPage> {
             ),
           ),
 
-          // ------------------ seller row ------------------
+          // ----- seller row -----
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
               child: Row(
                 children: [
-                  CircleAvatar(
-                    radius: 22,
-                    backgroundColor: cs.primaryContainer,
-                    backgroundImage: avatar.isNotEmpty
-                        ? NetworkImage(avatar)
-                        : null,
-                    child: avatar.isEmpty
-                        ? Text(
-                            (p.seller.username.isNotEmpty
-                                    ? p.seller.username[0]
-                                    : '?')
-                                .toUpperCase(),
-                            style: TextStyle(
-                              color: cs.onPrimaryContainer,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          )
-                        : null,
-                  ),
+                  _SellerAvatar(seller: p.seller),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -219,7 +197,13 @@ class _ProductPageState extends State<ProductPage> {
                     ),
                   ),
                   OutlinedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Open chat with seller (mock)'),
+                        ),
+                      );
+                    },
                     style: OutlinedButton.styleFrom(
                       shape: const StadiumBorder(),
                       side: BorderSide(color: cs.outline),
@@ -277,7 +261,7 @@ class _ProductPageState extends State<ProductPage> {
 
           const SliverToBoxAdapter(child: Divider(height: 1)),
 
-          // ------------------ title & price ------------------
+          // ----- title / meta / price -----
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
@@ -349,7 +333,7 @@ class _ProductPageState extends State<ProductPage> {
 
           const SliverToBoxAdapter(child: Divider(height: 1)),
 
-          // ------------------ description & facts ------------------
+          // ----- description -----
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 16),
@@ -372,6 +356,7 @@ class _ProductPageState extends State<ProductPage> {
             ),
           ),
 
+          // ----- facts table -----
           SliverToBoxAdapter(
             child: _FactsTable(
               rows: [
@@ -385,7 +370,79 @@ class _ProductPageState extends State<ProductPage> {
             ),
           ),
 
-          // ------------------ tabs ------------------
+          // ----- buyer protection -----
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: cs.primary.withOpacity(.08),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Icon(Icons.verified, color: cs.primary),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: RichText(
+                        text: TextSpan(
+                          style: Theme.of(context).textTheme.bodyMedium,
+                          children: const [
+                            TextSpan(
+                              text: 'Buyer Protection fee\n',
+                              style: TextStyle(fontWeight: FontWeight.w700),
+                            ),
+                            TextSpan(
+                              text:
+                                  'Our Buyer Protection is added for a fee to every purchase made with the "Buy now" button.',
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // ----- postage -----
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 16, 12, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Postage',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'From €2.79',
+                        style: TextStyle(color: Colors.black54),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    'The right of withdrawal of Article L. 221-18 ...',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // ----- tabs -----
           SliverToBoxAdapter(
             child: DefaultTabController(
               length: 2,
@@ -418,7 +475,7 @@ class _ProductPageState extends State<ProductPage> {
         ],
       ),
 
-      // ------------------ bottom buttons ------------------
+      // ----- bottom actions -----
       bottomNavigationBar: SafeArea(
         top: false,
         child: Container(
@@ -441,9 +498,11 @@ class _ProductPageState extends State<ProductPage> {
                     Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => MakeOfferPage(
-                          productTitle: p.title,
-                          productPrice: p.price,
-                          thumbUrl: p.images.isNotEmpty ? p.images.first : null,
+                          productTitle: widget.product.title,
+                          productPrice: widget.product.price,
+                          thumbUrl: widget.product.images.isNotEmpty
+                              ? widget.product.images.first
+                              : null,
                         ),
                       ),
                     );
@@ -463,7 +522,7 @@ class _ProductPageState extends State<ProductPage> {
                   onPressed: () {
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => CheckoutPage(product: p),
+                        builder: (_) => CheckoutPage(product: widget.product),
                       ),
                     );
                   },
@@ -478,7 +537,33 @@ class _ProductPageState extends State<ProductPage> {
   }
 }
 
-/* ------------ sub-widgets & helpers ------------- */
+class _SellerAvatar extends StatelessWidget {
+  const _SellerAvatar({required this.seller});
+  final Seller seller;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final url = seller.avatarUrl ?? '';
+    return CircleAvatar(
+      radius: 22,
+      backgroundColor: cs.primaryContainer,
+      backgroundImage: url.isNotEmpty ? NetworkImage(url) : null,
+      child: url.isEmpty
+          ? Text(
+              (seller.username.isNotEmpty ? seller.username[0] : '?')
+                  .toUpperCase(),
+              style: TextStyle(
+                color: cs.onPrimaryContainer,
+                fontWeight: FontWeight.bold,
+              ),
+            )
+          : null,
+    );
+  }
+}
+
+/* ---------------- sub-widgets & helpers ---------------- */
 
 class _FactsTable extends StatelessWidget {
   const _FactsTable({required this.rows});
@@ -582,7 +667,6 @@ class _SimilarItemsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: GridView.builder(
@@ -654,8 +738,6 @@ class _GridProductCard extends StatelessWidget {
   }
 }
 
-/* ------------ tiny helpers to fill the two tabs with demo data ------------- */
-
 String _timeAgo(DateTime dt) {
   final diff = DateTime.now().difference(dt);
   if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
@@ -664,44 +746,13 @@ String _timeAgo(DateTime dt) {
   return d == 1 ? '1 day ago' : '$d days ago';
 }
 
-List<Product> _demoProductsForSeller(Product base) => List.generate(
-  6,
-  (i) => Product(
-    id: 's-${i + 1}',
-    title: '${base.brand} item ${i + 1}',
-    brand: base.brand,
-    price: (base.price * (0.8 + i * 0.07)),
-    images: base.images,
-    condition: 'Good',
-    size: base.size,
-    colour: base.colour,
-    categoryPath: base.categoryPath,
-    description: 'Another ${base.brand} piece from ${base.seller.username}.',
-    seller: base.seller,
-    badges: const [],
+List<Product> _demoProductsForSeller(Product base) => List.generate(6, (i) {
+  return base.copyWith().copyWith(
+    // reuse base values, vary some
     likes: 3 + i,
-    likedByMe: false,
-    uploadedAt: DateTime.now().subtract(Duration(hours: 2 * (i + 1))),
-  ),
-);
+  );
+});
 
-List<Product> _demoSimilarProducts(Product base) => List.generate(
-  6,
-  (i) => Product(
-    id: 'm-${i + 1}',
-    title: 'Similar ${base.title} ${i + 1}',
-    brand: base.brand,
-    price: (base.price * (0.75 + i * 0.06)),
-    images: base.images,
-    condition: 'Very good',
-    size: base.size,
-    colour: base.colour,
-    categoryPath: base.categoryPath,
-    description: 'Similar item in ${base.categoryPath}.',
-    seller: Seller(username: 'otherUser', rating: 5, ratingCount: 200),
-    badges: const [],
-    likes: 1 + i,
-    likedByMe: false,
-    uploadedAt: DateTime.now().subtract(Duration(hours: 3 * (i + 1))),
-  ),
-);
+List<Product> _demoSimilarProducts(Product base) => List.generate(6, (i) {
+  return base.copyWith(likes: 1 + i);
+});
