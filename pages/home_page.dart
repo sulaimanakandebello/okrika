@@ -1,9 +1,10 @@
+// lib/pages/home_page.dart
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:flutter_okr/pages/product_page.dart'; // contains Productdet (the PAGE)
-import 'package:flutter_okr/state/app_state.dart';
-import 'package:flutter_okr/models/product.dart'; // Product (the MODEL)
+import '../state/app_state.dart';
+import '../models/product.dart';
+import 'product_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -25,15 +26,14 @@ class _HomePageState extends State<HomePage> {
   ];
   String _selected = 'All';
   bool _showShippingBanner = true;
-  bool _didLoad = false;
 
   @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (!_didLoad) {
-      _didLoad = true;
+  void initState() {
+    super.initState();
+    // Load the feed AFTER the first frame to avoid “markNeedsBuild during build”
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<AppState>().loadInitial();
-    }
+    });
   }
 
   @override
@@ -47,6 +47,7 @@ class _HomePageState extends State<HomePage> {
     final app = context.watch<AppState>();
     final query = _searchCtrl.text.trim().toLowerCase();
 
+    // Filter by selected chip + search box
     final List<Product> filtered = app.feed.where((p) {
       final inCat =
           _selected == 'All' ||
@@ -85,7 +86,7 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Filter chips
+          // Category filter chips
           SliverToBoxAdapter(
             child: SizedBox(
               height: 42,
@@ -115,7 +116,7 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
-          // Empty
+          // Empty state
           if (!app.loading && filtered.isEmpty)
             const SliverToBoxAdapter(
               child: Padding(
@@ -133,7 +134,7 @@ class _HomePageState extends State<HomePage> {
                   crossAxisCount: 2,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  childAspectRatio: 0.62, // taller cells to avoid overflow
+                  childAspectRatio: 0.62, // tall cells to avoid overflow
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, i) => _ItemCard(product: filtered[i]),
@@ -142,11 +143,12 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
 
+          // breathing room so last row isn't blocked by banners
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
 
-      // Shipping banner
+      // Shipping banner (dismissible)
       bottomSheet: _showShippingBanner
           ? SafeArea(
               child: Container(
@@ -203,7 +205,6 @@ class _ItemCard extends StatelessWidget {
       elevation: 0,
       child: InkWell(
         onTap: () {
-          // Push your PAGE widget (renamed to Productdet)
           Navigator.of(context).push(
             MaterialPageRoute(builder: (_) => ProductPage(product: product)),
           );
@@ -216,51 +217,47 @@ class _ItemCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: Image.network(
-                      product.images.first,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          const ColoredBox(color: Color(0xFFEFEFEF)),
-                    ),
+                    child: product.images.isEmpty
+                        ? const ColoredBox(color: Color(0xFFEFEFEF))
+                        : Image.network(
+                            product.images.first,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                const ColoredBox(color: Color(0xFFEFEFEF)),
+                          ),
                   ),
-                  // Likes bubble (tap to like)
+                  // Likes bubble (tap to like) — optional: wire to AppState.toggleLike
                   Positioned(
                     right: 8,
                     bottom: 8,
-                    child: InkWell(
-                      onTap: () =>
-                          context.read<AppState>().toggleLike(product.id),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 6,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(999),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(.12),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              product.likedByMe
-                                  ? Icons.favorite
-                                  : Icons.favorite_border,
-                              size: 18,
-                              color: product.likedByMe
-                                  ? Colors.red
-                                  : cs.primary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text('${product.likes}', style: t.bodyMedium),
-                          ],
-                        ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(999),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(.12),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            product.likedByMe
+                                ? Icons.favorite
+                                : Icons.favorite_border,
+                            size: 18,
+                            color: product.likedByMe ? Colors.red : cs.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text('${product.likes}', style: t.bodyMedium),
+                        ],
                       ),
                     ),
                   ),
@@ -310,10 +307,10 @@ class _ItemCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 4),
-                      const Icon(
+                      Icon(
                         Icons.verified_user,
                         size: 16,
-                        color: Colors.teal,
+                        color: Colors.teal[700],
                       ),
                     ],
                   ),
