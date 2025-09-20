@@ -1,6 +1,9 @@
+
+
 // lib/pages/search_page.dart
 import 'package:flutter/material.dart';
-import 'category_page.dart'; // your hierarchical category picker
+import 'package:flutter_okr/app_shell.dart';
+import 'package:flutter_okr/pages/category_page.dart';
 
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
@@ -18,9 +21,11 @@ class _SearchPageState extends State<SearchPage> {
     super.dispose();
   }
 
+  void _jumpToTab(int i) => AppShell.of(context)?.setTab(i);
+
   @override
   Widget build(BuildContext context) {
-    final items = const <_TopCat>[
+    const items = <_TopCat>[
       _TopCat('Women', Icons.woman_outlined),
       _TopCat('Men', Icons.man_outlined),
       _TopCat('Designer', Icons.diamond_outlined),
@@ -33,9 +38,18 @@ class _SearchPageState extends State<SearchPage> {
     ];
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
+      appBar: AppBar(
+        title: const Text('Search'),
+        actions: [
+          IconButton(
+            tooltip: 'Sell',
+            icon: const Icon(Icons.add_circle_outline),
+            onPressed: () => _jumpToTab(2), // open Sell tab from anywhere
+          ),
+        ],
+      ),
       body: ListView.separated(
-        itemCount: items.length + 1, // +1 for search bar
+        itemCount: items.length + 1, // search field + categories
         separatorBuilder: (_, __) => const Divider(height: 1),
         itemBuilder: (context, index) {
           if (index == 0) {
@@ -67,26 +81,21 @@ class _SearchPageState extends State<SearchPage> {
             title: Text(cat.label),
             trailing: const Icon(Icons.chevron_right),
             onTap: () {
-              // If your CategoryPage supports an initial path (as in our rework):
+              // Jump directly into that branch in CategoryPage
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const CategoryPage(
-                    // If your CategoryPage has: CategoryPage({this.initialPath})
-                    // uncomment next line and remove `const` if needed:
-                    // initialPath: [cat.label],
+                  builder: (_) => CategoryPage(
+                    initialPath: [
+                      cat.label,
+                    ], // e.g. ['Women'] -> shows Women’s children
                   ),
                 ),
               );
-
-              // If your CategoryPage DOESN'T support initialPath, just push:
-              // Navigator.push(context,
-              //   MaterialPageRoute(builder: (_) => const CategoryPage()));
             },
           );
         },
       ),
-      // ⛔️ No BottomNavigationBar here — AppShell owns the only one.
     );
   }
 }
