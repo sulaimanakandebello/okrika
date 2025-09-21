@@ -1,3 +1,4 @@
+/*
 // lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_okr/app_shell.dart';
@@ -59,6 +60,52 @@ class OkrikaApp extends StatelessWidget {
           return null;
         },
       ),
+    );
+  }
+}
+*/
+
+// lib/main.dart
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+
+import 'app_shell.dart';
+import 'state/app_state.dart';
+import 'data/firebase_products_repository.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+
+  // Single instance of repo for the app
+  final repo = FirebaseProductsRepository();
+
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (_) => AppState(repo: repo)..loadInitial()),
+      ],
+      child: const MyApp(),
+    ),
+  );
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Okrika',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.teal),
+        useMaterial3: true,
+      ),
+      home: const AppShell(),
     );
   }
 }
