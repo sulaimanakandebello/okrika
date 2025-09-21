@@ -1,4 +1,7 @@
 // lib/pages/home_page.dart
+// Add at the top
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -47,13 +50,26 @@ class _HomePageState extends State<HomePage> {
     final app = context.watch<AppState>();
     final query = _searchCtrl.text.trim().toLowerCase();
 
+// Inside a widget (e.g., HomePage AppBar actions)
+    IconButton(
+      icon: const Icon(Icons.cloud),
+      onPressed: () async {
+        final doc = await FirebaseFirestore.instance
+            .collection('ping')
+            .add({'at': DateTime.now().toIso8601String()});
+        // Optional read
+        final snap = await doc.get();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Firestore OK: ${snap.id.substring(0, 6)}')),
+        );
+      },
+    );
+
     // Filter by selected chip + search box
     final List<Product> filtered = app.feed.where((p) {
-      final inCat =
-          _selected == 'All' ||
+      final inCat = _selected == 'All' ||
           p.categoryPath.toLowerCase().contains(_selected.toLowerCase());
-      final matchesQuery =
-          query.isEmpty ||
+      final matchesQuery = query.isEmpty ||
           p.title.toLowerCase().contains(query) ||
           p.brand.toLowerCase().contains(query) ||
           p.description.toLowerCase().contains(query) ||
